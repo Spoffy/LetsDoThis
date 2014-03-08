@@ -1,0 +1,166 @@
+JSON FORMATS
+==============
+Calendar Info Format
+--------------------
+{
+    "calendar_id":Numeric ID of the calendar,
+    "events": [
+        {
+            "start_date":"DD-MM-YY",
+            "start_time": Time,
+            "end_date":"DD-MM-YY",
+            "end_time": Time
+        }
+    ]
+}
+
+Time - In minutes since 00.00 that day
+        
+
+
+Meeting Request
+---------------
+
+{
+    "user_id": "UserID",
+    "meeting_name": "NameOfMeeting",
+    "duration": LengthInMinutes,
+    "time_offset": TimezoneOffset,
+    "preferences": {
+        User preferences here
+    },
+    "calendar_info": See Calender Info
+}
+
+UserID could be a hash. Most likely a string. To be defined later.
+
+Acknowledgement
+________________
+{
+    "server_id": "ServerID",
+    "status_string": "Status",
+    "meeting_id": MeetingID
+}
+
+ServerID is some kind of auth token? Or just a unique reference to the server used.
+Status is a string with whether it was successful.
+MeetingID - ID of the request we're responding to.
+
+
+Check In
+________
+Sent to check in with the server. 
+
+{
+    "user_id": "UserID",
+    "time": Time,
+    "date": "DD-MM-YY",
+    "time_offset": TimezoneOffset
+}
+
+Check In Response
+-----------------
+Sent by the server after Check In.
+
+
+{
+    "server_id": "ServerID",
+    "status_string": "Status",
+    "actions" : [
+        {
+            "action":"Action Code",
+            "data":"Data"
+        }
+    ]
+}
+
+Status - If request was successful, or an error occured
+Action Code - The action that the client needs to take, if any. Examples: Send calendar data, respond to time, set check in frequency.
+
+Possible actions:
+"action":"send_calendar_data"
+"data":MeetingID
+
+"action":"respond_to_time"
+"data": {
+    "meeting_id": MeetingID,
+    "proposed": {
+        "date": "DD-MM-YY",
+        "time": Time
+    }
+}
+
+"action":"set_checkin_freq"
+"data": NewFreq
+
+NewFreq - Check in frequency in minutes.
+
+Action Performed
+------------------
+Sent as part of the application performing the action specified by the Check In Response.
+
+{
+    "user_id": "UserID",
+    "meeting_id": meeting_id,
+    "actions" : [
+        {
+            "action":"Action Code",
+            "data":"Data"
+        }
+    ]
+}
+
+"action":"send_calendar_data"
+"data": Calender Info Format
+
+"action":"respond_to_time"
+"data": {
+    "meeting_id": MeetingID,
+    "response": "Yes/No"
+}
+
+
+Events and How Things Work
+==========================
+Create New Meeting
+------------------
+
+1. Enter details on Application
+2. App synchronises calendar data as best possible.
+3. Application sends Meeting Request
+4. Application receives Acknowledgement with the Meeting ID.
+
+
+Check In
+--------
+Periodic check in from the app to the server.
+
+1. App sends Check In to the server.
+2. App receives a Check In Response, containing a number of actions to perform.
+3. App performs actions.
+
+
+Actions from Check in
+======================
+Send Calendar Data
+----------------------
+A request for the app to send calendar data.
+
+1. App synchronises calendar.
+2. App sends Action Performed to server with the meeting ID, "calendar_data" action and Calendar Info Format in the data. See above.
+
+
+Respond to Proposed Meeting Time
+--------------------------------
+A request for the app to accept or decline a meeting time.
+
+1. User selects 'Yes' or 'No'
+2. App sends Action Performed to server with the meeting ID, "reply_to_time" action and "Yes" or "No" in the data. See above.
+
+
+Set Check in Frequency
+-----------------------
+A request for the app to change how often it checks in.
+Most likely requested when the server thinks there'll be more data in a minute.
+
+1. App changes how often it checks in with the server.
