@@ -26,6 +26,7 @@ Meeting Request
     "meeting_name": "NameOfMeeting",
     "duration": LengthInMinutes,
     "time_offset": TimezoneOffset,
+    "friends": ["FriendID 1", "FriendID 2", "FriendID 3"],
     "preferences": {
         User preferences here
     },
@@ -38,7 +39,7 @@ Acknowledgement
 ________________
 {
     "server_id": "ServerID",
-    "status_string": "Status",
+    "status": "Status",
     "meeting_id": MeetingID
 }
 
@@ -65,7 +66,7 @@ Sent by the server after Check In.
 
 {
     "server_id": "ServerID",
-    "status_string": "Status",
+    "status": "Status",
     "actions" : [
         {
             "action":"Action Code",
@@ -84,6 +85,7 @@ Possible actions:
 "action":"respond_to_time"
 "data": {
     "meeting_id": MeetingID,
+    "meeting_name": "Name",
     "proposed": {
         "date": "DD-MM-YY",
         "time": Time
