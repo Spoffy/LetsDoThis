@@ -85,11 +85,21 @@ def get_attendees(meeting_id):
     values = cursor.fetchall()
     return values
 
+def remove_attendee(user_id, meeting_id):
+    logging.info("Removing " + str(user_id) + " from " + str(meeting_id))
+    cursor.execute("DELETE FROM Attending WHERE UserId=? AND MeetingId=?", (user_id, meeting_id))
+    conn.commit()
+
 def count_meetings(user_id):
     logging.info("Counting Meetings for user " + str(user_id))
     cursor.execute("SELECT COUNT(*) FROM Attending WHERE UserId=?", (user_id,))
     result = cursor.fetchone()
     return result[0]
+
+def get_meetings(user_id):
+    logging.info("Getting meetings for " + str(user_id))
+    cursor.execute("SELECT MeetingId FROM Attending WHERE UserId=?", (user_id,))
+    return cursor.fetchall()
 
 def update_user_calendar_info(user_id, calendar):
     logging.info("Updating calendar info for user " + str(user_id))
@@ -115,6 +125,11 @@ def remove_meeting(meeting_id):
         _remove_if_no_meetings(user[0])
     conn.commit()
 
+def get_meeting_duration(meeting_id):
+    logging.info("Getting meeting length")
+    cursor.execute("SELECT Duration FROM Meetings WHERE Id=?", (meeting_id,))
+    return cursor.fetchone()[0]
+
 def max_meeting_id():
     logging.info("Finding Max Meeting ID")
     cursor.execute("SELECT MAX(Id) FROM Meetings")
@@ -136,4 +151,57 @@ def get_ready_meetings(user_id, calendar_tolerance):
     SELECT Meetings.Id, Meetings.Name, Meetings.ProposedDate, Meetings.ProposedTime FROM Attending,Users,Meetings 
     WHERE Users.UserId=Attending.UserId AND Attending.MeetingId=Meetings.Id 
     AND Users.UserId = ? AND ProposedTime != -1""", (user_id,))
+    return cursor.fetchall()
+
+#REFACTOR
+def get_finished_meetings(user_id):
+    logging.info("Listing finished meetings for user " + str(user_id))
+    cursor.execute("SELECT Attending.MeetingId FROM Attending WHERE UserId = ?", (user_id,))
+    meetings = cursor.fetchall()
+    result_ids = list()
+    for meeting in meetings:
+        cursor.execute("SELECT UserId, Attending FROM Attending WHERE MeetingId=?", (meeting[0],))
+        users = cursor.fetchall()
+        for user in users:
+            if(user[1] == "UNK"):
+                break
+            if(user[1] == "NO"):
+                result_ids.append((meeting[0], "NO")) 
+                break
+        else:
+            result_ids.append((meeting[0], "YES"))
+    
+    results = list()
+    print(result_ids)
+    for meeting_pair in result_ids:
+        print(meeting_pair)
+        meeting_id = meeting_pair[0]
+        print(meeting_id)
+        cursor.execute("SELECT Id, Name, Duration, ProposedDate, ProposedTime FROM Meetings WHERE Id = ?", (meeting_id,))
+        result = list(cursor.fetchone())
+        result.append(meeting_pair[1])
+        results.append(result)
+    return results
+
+def meeting_ready_for_time(meeting_id, calendar_tolerance):
+    logging.info("Checking if meeting " + str(meeting_id) + " is ready for a time.")
+    adjusted_time = time.time() - calendar_tolerance
+    cursor.execute("""
+    SELECT COUNT(Users.UserId) 
+    FROM Users,Attending 
+    WHERE Users.UserId=Attending.UserId AND Users.CalendarLastUpdated < ? AND Attending.MeetingId = ?
+    """, (adjusted_time, meeting_id))
+    result = cursor.fetchone()[0]
+    logging.info("Result: " + str(result))
+    if(result > 0): return False
+    return True
+    
+def set_proposed_meeting_time(meeting_id, time, date):
+    logging.info("Setting " + str(meeting_id) + "'s proposal to " + str(time) + " ---- " + str(date))
+    cursor.execute("UPDATE Meetings SET ProposedDate=?, ProposedTime=? WHERE Id=?", (date, time, meeting_id))
+    conn.commit()
+
+def get_user_events(user_id):
+    logging.info("Retrieving events for " + str(user_id))
+    cursor.execute("SELECT * FROM Events WHERE UserId = ?", (user_id,))
     return cursor.fetchall()

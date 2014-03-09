@@ -21,6 +21,8 @@ Time - In minutes since 00.00 that day
 Meeting Request
 ---------------
 
+"json/meeting_request"
+
 {
     "user_id": "UserID",
     "meeting_name": "NameOfMeeting",
@@ -52,6 +54,8 @@ Check In
 ________
 Sent to check in with the server. 
 
+"json/check_in"
+
 {
     "user_id": "UserID",
     "time": Time,
@@ -62,7 +66,6 @@ Sent to check in with the server.
 Check In Response
 -----------------
 Sent by the server after Check In.
-
 
 {
     "server_id": "ServerID",
@@ -78,47 +81,44 @@ Sent by the server after Check In.
 Status - If request was successful, or an error occured
 Action Code - The action that the client needs to take, if any. Examples: Send calendar data, respond to time, set check in frequency.
 
+All data is an array of strings.
 Possible actions:
 "action":"send_calendar_data"
-"data":None
+"data": []
 
 "action":"respond_to_time"
-"data": {
-    "meeting_id": MeetingID,
-    "meeting_name": "Name",
-    "proposed": {
-        "date": "DD-MM-YY",
-        "time": Time
-    }
-}
-
+"data": [MeetingId, "meeting_name", "proposed_time", "proposed_date"]
+ 
 "action":"set_checkin_freq"
-"data": NewFreq
+"data": ["freq":NewFreq]
 
-NewFreq - Check in frequency in minutes.
+"action":"notify_meeting"
+"data" [Id, Name, Duration, MeetingDate, MeetingTime, Result]
+
+NewFreq - Check in frequency in minutes. String
 
 Action Performed
 ------------------
 Sent as part of the application performing the action specified by the Check In Response.
 
+"json/action_response"
+
 {
     "user_id": "UserID",
-    "meeting_id": meeting_id,
-    "actions" : [
+    "action" : 
         {
             "action":"Action Code",
             "data":"Data"
         }
-    ]
 }
 
+All data is an array of strings.
 "action":"send_calendar_data"
 "data": Calender Info Format
 
 "action":"respond_to_time"
-"data": {
-    "meeting_id": MeetingID,
-    "response": "Yes/No"
+"data": ["MeetingId", "YES/NO"]
+    
 }
 
 
