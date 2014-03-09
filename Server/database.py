@@ -106,10 +106,11 @@ def update_user_calendar_info(user_id, calendar):
     _add_user(user_id)
     cursor.execute("DELETE FROM Events WHERE UserId=?", (user_id,))
     for event in calendar["events"]:
-        start_date = calendar["StartDate"]
-        start_time = calendar["StartTime"]
-        end_date = calendar["EndDate"]
-        end_time = calendar["EndTime"]
+        print(event)
+        start_date = event["StartDate"]
+        start_time = event["StartTime"]
+        end_date = event["EndDate"]
+        end_time = event["EndTime"]
         assert (user_id and start_date and end_date and end_time), "Unable to add calendar, insufficient data"
         cursor.execute("INSERT INTO Events(UserId, StartDate, StartTime, EndDate, EndTime) VALUES (?,?,?,?,?)", (user_id, start_date, start_time, end_date, end_time))
     cursor.execute("UPDATE Users SET CalendarLastUpdated=? WHERE UserId=?", (time.time(), user_id))

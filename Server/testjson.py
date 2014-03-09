@@ -3,7 +3,7 @@ import logging
 import time
 import json
 
-logging.getLogger().setLevel("INFO")
+logging.getLogger().setLevel("WARN")
 
 #params = urllib.parse.urlencode({'@number': 12524, '@type': 'issue', '@action': 'show'})
 headers = {"Content-type": "application/json",
@@ -19,7 +19,7 @@ def post_json(action, json):
     conn.close()
     return data
 
-spoof_cal = {"calendar_id":102, "events":[]}
+spoof_cal = {"calendar_id":102, "events":[{"StartDate":"10-03-14", "StartTime":960, "EndDate":"11-03-14", "EndTime":600}]}
 spoof_meeting = {"user_id":60, "meeting_name":"Meeting: " + str(time.time()), "duration":60, "time_offset":2, "friends":["70","71","72"], "calendar_info":spoof_cal}
 spoof_meeting2 = {"user_id":50, "meeting_name":"Meeting: " + str(time.time()), "duration":60, "time_offset":2, "friends":["80"], "calendar_info":spoof_cal}
 
@@ -29,8 +29,8 @@ def perform_action(id, action, body):
         meeting_id = body[0]
         response = response + '{"action":"respond_to_time", "data":["' + str(meeting_id) + '", "YES"]}'
     if action == "send_calendar_data":
-        response = response + '{"action":"send_calendar_data", "data":'
-        response = response + '{"calendar_id":3, "events":[]}}'
+        temp = {"action":"send_calendar_data", "data":spoof_cal}
+        response = response + json.dumps(temp)
     if action == "notify_meeting":
         meeting_name = str(body[0])
         duration = str(body[1])
@@ -40,6 +40,7 @@ def perform_action(id, action, body):
         print("MEETING ARRANGED: " + meeting_name + " " + duration + " " + date + " " + time + " " + result)
         return
     response = response + "}"
+    print(json.loads(response))
     post_json("action_response", response)
 
 def check_in(id):

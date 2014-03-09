@@ -17,17 +17,29 @@ def calculate_meeting_time(meeting_id):
 
     free_time.append(_starting_time())
 
+    logging.info("Dumping Free Time: " + str(free_time))
+
     for event in events:
         for block in free_time:
             if block[0] <= event[0] and block[1] >= event[1]:
                 free_time_buffer.append((block[0], event[0]))
                 free_time_buffer.append((event[1], block[1]))
+            elif block[0] >= event[0] and block[1] >= event[1]:
+                free_time_buffer.append((event[1], block[1]))
+            elif block[0] <= event[0] and block[1] <= event[1]:
+                free_time_buffer.append((block[0], event[0]))
+            else:
+                free_time_buffer.append(block)
         
+        logging.info("Event during Free Space: " + str(event))
         free_time = free_time_buffer
         free_time_buffer = list()
 
-    valid_min = (sys.maxsize, sys.maxsize)
+    logging.info("ReDumping Free Time: " + str(free_time))
+
+    valid_min = (_starting_time()[1], _starting_time()[1])
     for block in free_time:
+        logging.info("Free Time Block: " + str(block))
         if(block[1] - block[0] >= duration and block[0] < valid_min[0]):
             valid_min = block
     
@@ -50,6 +62,7 @@ def _get_events(meeting_id):
         timetables.append(database.get_user_events(attendee[0]))
     for timetable in timetables:
         for event in timetable:
+            logging.info("Event to Tuple: " + str(event) + " To Tuple: " + str(_event_to_tuple(event)))
             events.append(_event_to_tuple(event))
 
     return events
