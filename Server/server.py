@@ -5,6 +5,7 @@ import traceback
 
 @post('/json/<action>')
 def handle_json(action):
+    logging.info("Incoming JSON Body: " + str(request.body.getvalue(), encoding='UTF-8'))
     try:
         data = request.json
     except ValueError:
@@ -13,7 +14,6 @@ def handle_json(action):
     if not data:
         abort(400, "Bad JSON Syntax")
     response.content_type = "application/json"
-    logging.info(data)
     reply = message_handlers.get(action, lambda self: abort(404, "Invalid JSON URI"))(data)
     return reply.to_json() 
 

@@ -3,7 +3,7 @@ import logging
 import time
 import json
 
-logging.getLogger().setLevel("WARN")
+logging.getLogger().setLevel("INFO")
 
 #params = urllib.parse.urlencode({'@number': 12524, '@type': 'issue', '@action': 'show'})
 headers = {"Content-type": "application/json",
