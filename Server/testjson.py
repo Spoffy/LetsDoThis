@@ -32,15 +32,14 @@ def perform_action(id, action, body):
         temp = {"action":"send_calendar_data", "data":spoof_cal}
         response = response + json.dumps(temp)
     if action == "notify_meeting":
-        meeting_name = str(body[0])
-        duration = str(body[1])
-        date = str(body[2])
-        time = str(body[3])
-        result = str(body[4])
-        print("MEETING ARRANGED: " + meeting_name + " " + duration + " " + date + " " + time + " " + result)
+        meeting_name = str(body[1])
+        duration = str(body[2])
+        date = str(body[3])
+        time = str(body[4])
+        result = str(body[5])
+        print("MEETING ARRANGED: Name:" + meeting_name + " Duration: " + duration + " Date: " + date + " Time:" + time + " Going Ahead?: " + result)
         return
     response = response + "}"
-    print(json.loads(response))
     post_json("action_response", response)
 
 def check_in(id):
