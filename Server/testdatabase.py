@@ -64,7 +64,10 @@ attendees = database.get_attendees(3)
 for user in attendees:
     logging.info("Attending Two: " + str(user[0]))
 
-
+logging.info("Making User 8 attend meeting 3")
 database.set_attending(8,3,"YES")
+
+logging.info("Getting when User 8's calendar was last updated...")
+logging.info("Last Updated: " + str(database.get_calendar_last_updated(8)))
 
 dump_database()

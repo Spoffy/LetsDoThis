@@ -80,7 +80,7 @@ Action Code - The action that the client needs to take, if any. Examples: Send c
 
 Possible actions:
 "action":"send_calendar_data"
-"data":MeetingID
+"data":None
 
 "action":"respond_to_time"
 "data": {

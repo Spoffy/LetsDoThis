@@ -1,5 +1,6 @@
 import sqlite3
 import logging
+import time
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -23,7 +24,7 @@ if not check_table_existance("Events"):
     logging.info("Created Events")
 
 if not check_table_existance("Users"):
-    cursor.execute("CREATE TABLE Users(UserId INTEGER PRIMARY KEY)")
+    cursor.execute("CREATE TABLE Users(UserId INTEGER PRIMARY KEY, CalendarLastUpdated INTEGER)")
     logging.info("Created Users")
 
 
@@ -38,7 +39,7 @@ def _add_user(user):
     cursor.execute("SELECT UserId FROM Users WHERE UserId=?", (user,))
     result = cursor.fetchone()
     if not result:
-        cursor.execute("INSERT INTO Users(UserId) VALUES (?)", (user,))
+        cursor.execute("INSERT INTO Users(UserId, CalendarLastUpdated) VALUES (?, 0)", (user,))
         return True
     return False
 
@@ -90,9 +91,10 @@ def count_meetings(user_id):
     result = cursor.fetchone()
     return result[0]
 
-def add_user_calendar_info(user_id, calendar):
-    logging.info("Adding calendar info for user " + str(user_id))
+def update_user_calendar_info(user_id, calendar):
+    logging.info("Updating calendar info for user " + str(user_id))
     _add_user(user_id)
+    cursor.execute("DELETE FROM Events WHERE UserId=?", (user_id,))
     for event in calendar["events"]:
         start_date = calendar["StartDate"]
         start_time = calendar["StartTime"]
@@ -100,6 +102,7 @@ def add_user_calendar_info(user_id, calendar):
         end_time = calendar["EndTime"]
         assert (user_id and start_date and end_date and end_time), "Unable to add calendar, insufficient data"
         cursor.execute("INSERT INTO Events(UserId, StartDate, StartTime, EndDate, EndTime) VALUES (?,?,?,?,?)", (user_id, start_date, start_time, end_date, end_time))
+    cursor.execute("UPDATE Users SET CalendarLastUpdated=? WHERE UserId=?", (time.time(), user_id))
     conn.commit()
     
 def remove_meeting(meeting_id):
@@ -113,7 +116,24 @@ def remove_meeting(meeting_id):
     conn.commit()
 
 def max_meeting_id():
+    logging.info("Finding Max Meeting ID")
     cursor.execute("SELECT MAX(Id) FROM Meetings")
     result = cursor.fetchone()
     if not result: return 0
     return result[0]
+
+def get_calendar_last_updated(user_id):
+    logging.info("Finding date that " + str(user_id) + "'s calendar was last updated.")
+    cursor.execute("SELECT CalendarLastUpdated FROM Users WHERE UserId=?", (user_id,))
+    result = cursor.fetchone()
+    if result: return result[0]
+    return 0
+
+def get_ready_meetings(user_id, calendar_tolerance):
+    logging.info("Listing meetings that are ready for user " + str(user_id) + "'s response.")
+    adjusted_time = time.time() - calendar_tolerance
+    cursor.execute("""
+    SELECT Meetings.Id, Meetings.Name, Meetings.ProposedDate, Meetings.ProposedTime FROM Attending,Users,Meetings 
+    WHERE Users.UserId=Attending.UserId AND Attending.MeetingId=Meetings.Id 
+    AND Users.UserId = ? AND ProposedTime != -1""", (user_id,))
+    return cursor.fetchall()
